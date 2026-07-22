@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pusat Kendali Inovasi — Provinsi Maluku Utara</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --ink:#12203B;
+  --ink-2:#1B2E52;
+  --sea:#1F6F78;
+  --sea-light:#DCEEEF;
+  --spice:#C1811E;
+  --spice-light:#F7E8CE;
+  --clove:#8A3324;
+  --clove-light:#F5DFDA;
+  --paper:#F6F3EC;
+  --card:#FFFFFF;
+  --line:#E3DDCC;
+  --ink-soft:#586178;
+  --ink-faint:#8B93A6;
+  --good:#2E7D5B;
+  --good-light:#DCEFE5;
+  --warn:#B8801A;
+  --warn-light:#FBEBD3;
+  --bad:#B03A2E;
+  --bad-light:#F8DFDA;
+  --radius:10px;
+  --shadow: 0 1px 2px rgba(18,32,59,.06), 0 6px 20px rgba(18,32,59,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+.mono{font-family:'IBM Plex Mono',monospace;}
+.display{font-family:'Fraunces',serif;}
+
+/* ---------- Top bar ---------- */
+.topbar{
+  background:linear-gradient(180deg, var(--ink) 0%, var(--ink-2) 100%);
+  color:#EFEFEA;
+  padding:22px 32px 0 32px;
+  position:relative;
+}
+.topbar-inner{
+  display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;
+  max-width:1400px; margin:0 auto;
+}
+.brand{display:flex; align-items:center; gap:14px;}
+.brand-mark{
+  width:44px;height:44px;border-radius:10px;
+  background:radial-gradient(circle at 30% 30%, var(--spice) 0%, #8f5e10 100%);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Fraunces',serif; font-weight:700; color:#1a1206; font-size:20px;
+  flex-shrink:0;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.15);
+}
+.brand-text h1{
+  font-family:'Fraunces',serif; font-weight:600; font-size:22px; margin:0; letter-spacing:.2px; color:#fff;
+}
+.brand-text p{margin:2px 0 0 0; font-size:12.5px; color:#B9C2D9; letter-spacing:.3px;}
+.top-actions{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+.pill{
+  font-size:11.5px; color:#C9D2E6; background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.14); border-radius:100px; padding:6px 12px;
+  display:flex; align-items:center; gap:6px;
+}
+.pill .dot{width:7px;height:7px;border-radius:50%;background:var(--good); box-shadow:0 0 0 3px rgba(46,125,91,.25);}
+.pill.dot-warn .dot{background:var(--warn); box-shadow:0 0 0 3px rgba(184,128,26,.25);}
+.pill.dot-bad .dot{background:var(--bad); box-shadow:0 0 0 3px rgba(176,58,46,.25);}
+
+.btn{
+  font-family:'Inter',sans-serif; font-size:13px; font-weight:600; cursor:pointer;
+  border-radius:8px; padding:9px 16px; border:1px solid transparent; transition:all .15s ease;
+  display:inline-flex; align-items:center; gap:7px;
+}
+.btn-primary{background:var(--spice); color:#251701; border-color:#8f5e10;}
+.btn-primary:hover{background:#D3902B;}
+.btn-ghost{background:rgba(255,255,255,.05); color:#EFEFEA; border-color:rgba(255,255,255,.22);}
+.btn-ghost:hover{background:rgba(255,255,255,.12);}
+.btn-outline{background:transparent; color:var(--ink); border-color:var(--line);}
+.btn-outline:hover{background:#fff;}
+.btn-sm{padding:5px 10px; font-size:12px; border-radius:6px;}
+#fileInput{display:none;}
+
+/* tide line signature */
+.tide{
+  height:22px; margin-top:20px; overflow:hidden; position:relative;
+}
+.tide svg{position:absolute; bottom:0; width:200%; height:100%; animation: drift 26s linear infinite;}
+@media (prefers-reduced-motion: reduce){ .tide svg{animation:none;} }
+@keyframes drift{ from{transform:translateX(0);} to{transform:translateX(-50%);} }
+
+/* ---------- Tabs ---------- */
+.tabs{
+  max-width:1400px; margin:0 auto; padding:0 32px; display:flex; gap:4px;
+  border-bottom:1px solid var(--line); background:var(--paper);
+}
+.tab{
+  font-size:13.5px; font-weight:600; color:var(--ink-soft); padding:13px 16px; cursor:pointer;
+  border-bottom:2.5px solid transparent; letter-spacing:.15px; user-select:none;
+  display:flex; align-items:center; gap:7px;
+}
+.tab:hover{color:var(--ink);}
+.tab.active{color:var(--ink); border-bottom-color:var(--spice);}
+.tab .count{
+  font-family:'IBM Plex Mono',monospace; font-size:10.5px; background:var(--sea-light); color:var(--sea);
+  padding:1px 6px; border-radius:100px;
+}
+.tab.active .count{background:var(--spice-light); color:#8f5e10;}
+
+/* ---------- Layout ---------- */
+.wrap{max-width:1400px; margin:0 auto; padding:26px 32px 60px 32px;}
+.view{display:none;}
+.view.active{display:block; animation:fade .25s ease;}
+@keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+.section-title{
+  font-family:'Fraunces',serif; font-size:19px; font-weight:600; color:var(--ink); margin:0 0 4px 0;
+}
+.section-sub{font-size:12.5px; color:var(--ink-faint); margin:0 0 16px 0;}
+
+/* KPI cards */
+.kpi-row{display:grid; grid-template-columns:repeat(auto-fit, minmax(168px,1fr)); gap:14px; margin-bottom:22px;}
+.kpi{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;
+  box-shadow:var(--shadow);
+}
+.kpi .lbl{font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.6px; font-weight:600;}
+.kpi .val{font-family:'IBM Plex Mono',monospace; font-size:30px; font-weight:600; color:var(--ink); margin-top:6px;}
+.kpi .sub{font-size:11.5px; color:var(--ink-soft); margin-top:4px;}
+.kpi .sub.bad{color:var(--bad);}
+.kpi .sub.good{color:var(--good);}
+.kpi .sub.warn-kpi{color:var(--warn);}
+.kpi-click{cursor:pointer; transition:all .15s ease;}
+.kpi-click:hover{border-color:var(--spice); box-shadow:0 2px 10px rgba(193,129,30,.18); transform:translateY(-1px);}
+
+/* Grid panels */
+.grid-2{display:grid; grid-template-columns:repeat(auto-fit, minmax(380px,1fr)); gap:16px; margin-bottom:16px;}
+.grid-3{display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:16px; margin-bottom:16px;}
+
+.card{
+  background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px;
+  box-shadow:var(--shadow);
+}
+.card h3{
+  font-family:'Fraunces',serif; font-size:15px; font-weight:600; margin:0 0 3px 0; color:var(--ink);
+}
+.card .cardsub{font-size:11.5px; color:var(--ink-faint); margin-bottom:12px;}
+.chart-wrap{position:relative; height:230px;}
+.chart-wrap.tall{height:290px;}
+
+/* Yandas checklist */
+.yandas-banner{
+  display:flex; align-items:center; justify-content:space-between; gap:14px;
+  padding:14px 18px; border-radius:var(--radius); margin-bottom:14px; border:1px solid;
+}
+.yandas-banner.ok{background:var(--good-light); border-color:#B9DECB; color:#1E5B41;}
+.yandas-banner.bad{background:var(--bad-light); border-color:#EFC3BA; color:#7A2A20;}
+.yandas-banner .big{font-family:'Fraunces',serif; font-size:16px; font-weight:600;}
+.yandas-list{display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr)); gap:10px;}
+.yandas-item{
+  display:flex; align-items:center; gap:10px; padding:11px 13px; border-radius:8px; border:1px solid var(--line);
+  background:#FBFAF6;
+}
+.yandas-item .check{
+  width:22px;height:22px;border-radius:50%;flex-shrink:0; display:flex;align-items:center;justify-content:center;
+  font-size:12px; font-weight:700;
+}
+.yandas-item.yes .check{background:var(--good-light); color:var(--good);}
+.yandas-item.no .check{background:var(--bad-light); color:var(--bad);}
+.yandas-item .txt{font-size:12.5px; font-weight:600; color:var(--ink); line-height:1.3;}
+.yandas-item .cnt{font-size:11px; color:var(--ink-faint); font-family:'IBM Plex Mono',monospace;}
+
+/* Table */
+.table-toolbar{display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; align-items:center;}
+.search-input, select.filter-select{
+  font-family:'Inter',sans-serif; font-size:12.5px; padding:8px 12px; border-radius:8px; border:1px solid var(--line);
+  background:#fff; color:var(--ink);
+}
+.search-input{min-width:230px;}
+.table-scroll{overflow:auto; border:1px solid var(--line); border-radius:var(--radius); background:#fff;}
+table{border-collapse:collapse; width:100%; font-size:12.5px;}
+thead th{
+  position:sticky; top:0; background:#FBFAF6; text-align:left; padding:10px 12px; font-weight:700;
+  color:var(--ink-soft); font-size:11px; text-transform:uppercase; letter-spacing:.4px; cursor:pointer;
+  border-bottom:1px solid var(--line); white-space:nowrap;
+}
+thead th:hover{color:var(--ink);}
+thead th .arrow{opacity:.4; margin-left:3px;}
+tbody td{padding:9px 12px; border-bottom:1px solid #F0EDE3; vertical-align:top; color:var(--ink);}
+tbody tr:hover{background:#FBFAF3;}
+tbody tr.flag-bad{background:var(--bad-light);}
+tbody tr.flag-bad:hover{background:#F6D3CB;}
+tbody tr.flag-warn{background:var(--warn-light);}
+tbody tr.flag-warn:hover{background:#F7E2B8;}
+.badge{
+  display:inline-block; font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:100px;
+}
+.badge.penerapan{background:var(--good-light); color:var(--good);}
+.badge.ujicoba{background:var(--warn-light); color:var(--warn);}
+.badge.inisiatif{background:var(--sea-light); color:var(--sea);}
+.kmt-bar{width:60px; height:6px; border-radius:100px; background:#EDE9DC; overflow:hidden; display:inline-block; vertical-align:middle; margin-right:6px;}
+.kmt-bar-fill{height:100%; background:var(--spice);}
+.pagination{display:flex; align-items:center; gap:8px; justify-content:flex-end; margin-top:12px; font-size:12px; color:var(--ink-soft);}
+
+/* Tindak lanjut */
+.tl-item{
+  display:flex; gap:14px; padding:14px 16px; border:1px solid var(--line); border-radius:10px; margin-bottom:10px; background:#fff;
+}
+.tl-sev{
+  width:6px; border-radius:4px; flex-shrink:0;
+}
+.tl-sev.crit{background:var(--bad);}
+.tl-sev.warn{background:var(--warn);}
+.tl-body{flex:1;}
+.tl-title{font-weight:700; font-size:13.5px; color:var(--ink); margin-bottom:2px;}
+.tl-meta{font-size:11.5px; color:var(--ink-faint); margin-bottom:6px;}
+.tl-reasons{display:flex; gap:6px; flex-wrap:wrap;}
+.tl-reason{
+  font-size:11px; padding:3px 9px; border-radius:100px; font-weight:600;
+}
+.tl-reason.crit{background:var(--bad-light); color:var(--bad);}
+.tl-reason.warn{background:var(--warn-light); color:var(--warn);}
+
+/* Verifikasi skor tinggi */
+.verif-panel{
+  border-radius:var(--radius); border:1px solid; padding:16px 18px; margin-bottom:16px;
+}
+.verif-panel.crit{background:#FDF4F2; border-color:#E9C1B7;}
+.verif-panel.warn{background:#FDF8EE; border-color:#EBD4A0;}
+.verif-panel-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:4px; flex-wrap:wrap; gap:8px;}
+.verif-panel-head h3{font-family:'Fraunces',serif; font-size:15.5px; font-weight:600; margin:0;}
+.verif-panel.crit h3{color:var(--clove);}
+.verif-panel.warn h3{color:#8f5e10;}
+.verif-panel-sub{font-size:12px; color:var(--ink-soft); margin-bottom:12px;}
+.verif-progress{font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:600; color:var(--ink-soft); background:rgba(255,255,255,.6); padding:3px 10px; border-radius:100px;}
+.verif-item{
+  display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border-radius:8px; background:#fff; border:1px solid var(--line);
+  margin-bottom:8px; flex-wrap:wrap;
+}
+.verif-info{flex:1; min-width:200px;}
+.verif-title{font-weight:700; font-size:13px; color:var(--ink); margin-bottom:2px;}
+.verif-meta{font-size:11.5px; color:var(--ink-faint);}
+.verif-score{
+  font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:15px; padding:4px 11px; border-radius:8px; flex-shrink:0;
+}
+.verif-score.crit{background:var(--bad-light); color:var(--bad);}
+.verif-score.warn{background:var(--warn-light); color:var(--warn);}
+.verif-controls{display:flex; gap:8px; align-items:center; flex-wrap:wrap; flex-shrink:0;}
+.verif-select{
+  font-family:'Inter',sans-serif; font-size:11.5px; padding:6px 9px; border-radius:6px; border:1px solid var(--line); background:#fff; min-width:190px;
+}
+.verif-select.st-belum{color:var(--ink-soft);}
+.verif-select.st-valid{color:var(--good); font-weight:600;}
+.verif-select.st-revisi{color:var(--bad); font-weight:600;}
+.verif-select.st-anomali{color:var(--clove); font-weight:600;}
+.verif-empty{font-size:12.5px; color:var(--ink-faint); padding:8px 2px;}
+
+/* Riwayat */
+.scroll-hint{display:none; font-size:11px; color:var(--ink-faint); margin-bottom:8px; font-style:italic;}
+.snap-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+.snap-row{
+  display:grid; grid-template-columns:130px 90px 1fr 1fr 1fr 90px 34px; gap:12px; align-items:center;
+  padding:12px 14px; border:1px solid var(--line); border-radius:8px; margin-bottom:8px; background:#fff; font-size:12.5px;
+  min-width:640px;
+}
+.snap-row.head{background:#FBFAF6; font-weight:700; color:var(--ink-soft); font-size:10.5px; text-transform:uppercase; letter-spacing:.4px;}
+.delta{font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600;}
+.delta.up{color:var(--good);}
+.delta.down{color:var(--bad);}
+.delta.flat{color:var(--ink-faint);}
+.empty-state{
+  text-align:center; padding:60px 20px; color:var(--ink-faint);
+}
+.empty-state .icon{font-size:34px; margin-bottom:10px;}
+.empty-state p{font-size:13px; max-width:380px; margin:6px auto 0 auto;}
+
+.footer-note{
+  text-align:center; font-size:11.5px; color:var(--ink-faint); margin-top:40px; padding-top:18px; border-top:1px solid var(--line);
+}
+.trash-btn{background:none;border:none;cursor:pointer;color:var(--ink-faint); font-size:14px;}
+.trash-btn:hover{color:var(--bad);}
+.toast{
+  position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px); opacity:0;
+  background:var(--ink); color:#fff; padding:11px 20px; border-radius:8px; font-size:13px; font-weight:600;
+  box-shadow:0 8px 24px rgba(0,0,0,.2); transition:all .25s ease; pointer-events:none; z-index:999;
+}
+.toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+/* ---------- Mobile responsive pass ---------- */
+@media(max-width:760px){
+  .topbar{padding:16px 16px 0 16px;}
+  .brand-mark{width:36px; height:36px; font-size:16px; border-radius:8px;}
+  .brand-text h1{font-size:17px;}
+  .brand-text p{font-size:10.5px;}
+  .top-actions{gap:7px;}
+  .top-actions .btn span{display:none;}
+  .btn{padding:8px 11px; font-size:12px;}
+  .pill{font-size:10px; padding:5px 9px;}
+  .tabs{padding:0 16px; overflow-x:auto; white-space:nowrap; -webkit-overflow-scrolling:touch; flex-wrap:nowrap;}
+  .tabs::-webkit-scrollbar{height:3px;}
+  .tab{padding:11px 11px; font-size:12.5px; flex-shrink:0;}
+  .wrap{padding:16px 14px 40px 14px;}
+  .kpi-row{grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px;}
+  .kpi{padding:12px 13px;}
+  .kpi .val{font-size:22px;}
+  .kpi .lbl{font-size:10px;}
+  .grid-2, .grid-3{grid-template-columns:1fr;}
+  .card{padding:14px 14px;}
+  .chart-wrap{height:200px;}
+  .chart-wrap.tall{height:230px;}
+  .section-title{font-size:16px;}
+  .yandas-banner{flex-direction:column; align-items:flex-start; gap:6px;}
+  .yandas-list{grid-template-columns:1fr 1fr;}
+  .scroll-hint{display:block;}
+  .table-toolbar{gap:7px;}
+  .search-input{min-width:0; width:100%;}
+  .table-toolbar > *{width:100%;}
+  .table-toolbar{flex-direction:column; align-items:stretch;}
+  .table-toolbar select, .table-toolbar button{width:100%;}
+  thead th{font-size:10px; padding:8px 9px;}
+  tbody td{padding:8px 9px; font-size:11.5px;}
+  .pagination{flex-wrap:wrap; justify-content:center;}
+  .tl-item{flex-direction:row; padding:12px;}
+  .snap-row{font-size:11.5px;}
+}
+@media(max-width:420px){
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .brand-text p{display:none;}
+  .yandas-list{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <div class="brand-mark">SCP</div>
+      <div class="brand-text">
+        <h1>Pusat Kendali Inovasi</h1>
+        <p>Provinsi Maluku Utara — Monitoring &amp; Evaluasi Indeks Inovasi Daerah</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="pill" id="statusPill"><span class="dot"></span><span id="statusText">Memuat data…</span></span>
+      <button class="btn btn-ghost btn-sm" id="snapshotBtn">💾 Simpan Snapshot</button>
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+      <button class="btn btn-primary" id="uploadBtn">⇪ Unggah Data Terbaru</button>
+    </div>
+  </div>
+  <div class="tide">
+    <svg viewBox="0 0 1600 22" preserveAspectRatio="none"><path d="M0 12 Q 40 2 80 12 T 160 12 T 240 12 T 320 12 T 400 12 T 480 12 T 560 12 T 640 12 T 720 12 T 800 12 T 880 12 T 960 12 T 1040 12 T 1120 12 T 1200 12 T 1280 12 T 1360 12 T 1440 12 T 1520 12 T 1600 12" fill="none" stroke="#C1811E" stroke-opacity="0.55" stroke-width="1.4"/></svg>
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-view="ringkasan">Ringkasan</div>
+    <div class="tab" data-view="data">Data Inovasi <span class="count" id="cntData">0</span></div>
+    <div class="tab" data-view="tindaklanjut">Perlu Tindak Lanjut <span class="count" id="cntTL">0</span></div>
+    <div class="tab" data-view="riwayat">Riwayat Unggahan <span class="count" id="cntSnap">0</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- RINGKASAN -->
+  <div class="view active" id="view-ringkasan">
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <div id="yandasBox"></div>
+
+    <div id="verifSection"></div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Sebaran Bentuk Inovasi</h3>
+        <div class="cardsub">Pelayanan publik · tata kelola pemerintahan · lainnya</div>
+        <div class="chart-wrap"><canvas id="chartBentuk"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Jenis Inovasi</h3>
+        <div class="cardsub">Digital vs Non-Digital vs Teknologi</div>
+        <div class="chart-wrap"><canvas id="chartJenis"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>10 OPD Paling Aktif</h3>
+        <div class="cardsub">Jumlah inovasi dilaporkan per perangkat daerah</div>
+        <div class="chart-wrap tall"><canvas id="chartOPD"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Distribusi Skor Kelengkapan</h3>
+        <div class="cardsub">Kolom "Kematangan" — 0 s.d. 100</div>
+        <div class="chart-wrap tall"><canvas id="chartKematangan"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Tren Pelaporan Inovasi</h3>
+      <div class="cardsub">Jumlah inovasi berdasarkan bulan input data</div>
+      <div class="chart-wrap"><canvas id="chartTren"></canvas></div>
+    </div>
+  </div>
+
+  <!-- DATA -->
+  <div class="view" id="view-data">
+    <div class="section-title">Data Inovasi</div>
+    <div class="section-sub">Seluruh inovasi yang sudah diinput. Klik header kolom untuk mengurutkan. Baris merah/kuning menandai isian yang perlu dilengkapi.</div>
+    <div class="table-toolbar">
+      <input class="search-input" id="searchBox" placeholder="Cari judul inovasi, OPD, urusan…">
+      <select class="filter-select" id="filterTahapan"><option value="">Semua Tahapan</option></select>
+      <select class="filter-select" id="filterJenis"><option value="">Semua Jenis</option></select>
+      <select class="filter-select" id="filterBentuk"><option value="">Semua Bentuk</option></select>
+      <select class="filter-select" id="filterFlag">
+        <option value="">Semua Status</option>
+        <option value="flag">Hanya perlu tindak lanjut</option>
+      </select>
+      <button class="btn btn-outline btn-sm" id="resetFilters">Reset Filter</button>
+      <button class="btn btn-outline btn-sm" id="exportCsv">⇩ Ekspor CSV (hasil filter)</button>
+    </div>
+    <div class="scroll-hint">Geser ke samping untuk melihat semua kolom di layar kecil →</div>
+    <div class="table-scroll">
+      <table>
+        <thead><tr id="tableHead"></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+  <!-- TINDAK LANJUT -->
+  <div class="view" id="view-tindaklanjut">
+    <div class="section-title">Perlu Tindak Lanjut</div>
+    <div class="section-sub">Inovasi dengan indikasi kelengkapan data belum memenuhi syarat Pedoman Umum IID 2026 — urutan berdasarkan tingkat urgensi.</div>
+    <div id="tlList"></div>
+  </div>
+
+  <!-- RIWAYAT -->
+  <div class="view" id="view-riwayat">
+    <div class="section-title">Riwayat Unggahan</div>
+    <div class="section-sub">Setiap kali data baru diunggah dan snapshot disimpan, ringkasannya tercatat di sini untuk memantau perkembangan dari waktu ke waktu.</div>
+    <div id="snapList"></div>
+  </div>
+
+  <div class="footer-note" id="footerNote">Pusat Kendali Inovasi · Provinsi Maluku Utara · Mengacu Pedoman Umum Penilaian Inovasi Daerah &amp; IGA 2026 (BSKDN Kemendagri)</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SEED_DATA = [{"no": 1, "judul": "PERCEPATAN PENATAAN KAWASAN HUTAN MELALUI PROGRAM TANAH OBYEK REFORMA AGRARIA (PAKATORA)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kehutanan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Teknologi", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pekerjaan umum dan penataan ruang,kehutanan", "kematangan": 88.0, "tahapan": "Penerapan", "tanggalInput": "20-06-2024"}, {"no": 2, "judul": "SI MALAHA (Aksi Maluku Utara Landaikan Angka HIV/AIDS)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan,sosial,pemberdayaan masyarakat dan Desa", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "18-07-2024"}, {"no": 3, "judul": "KARISMA (KADER POSYANDU RESPONSIF, AKTIF, SIGAP, TERAMPIL)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan,sosial,pemberdayaan perempuan dan pelindungan anak,pemberdayaan masyarakat dan Desa,pengendalian penduduk dan keluarga berencana,komunikasi dan informatika,Perencanaan", "kematangan": 101.0, "tahapan": "Penerapan", "tanggalInput": "27-06-2025"}, {"no": 4, "judul": "Penasaran Klick Aset", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kelautan dan Perikanan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kelautan dan perikanan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 29.0, "tahapan": "Penerapan", "tanggalInput": "02-07-2025"}, {"no": 5, "judul": "SiRanting", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kelautan dan Perikanan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kelautan dan perikanan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "02-07-2025"}, {"no": 6, "judul": "SIPARAU", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kelautan dan Perikanan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kelautan dan perikanan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 17.0, "tahapan": "Penerapan", "tanggalInput": "02-07-2025"}, {"no": 7, "judul": "TARIKAN PUKAT DAPAT RAHMAT", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kelautan dan Perikanan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kelautan dan perikanan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 25.0, "tahapan": "Penerapan", "tanggalInput": "02-07-2025"}, {"no": 8, "judul": "MANISO BACA", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Perpustakaan dan Kearsipan Daerah", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,perpustakaan", "kematangan": 97.0, "tahapan": "Penerapan", "tanggalInput": "06-07-2025"}, {"no": 9, "judul": "PENINSULA SIBUA LITERASI", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Perpustakaan dan Kearsipan Daerah", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,perpustakaan", "kematangan": 106.0, "tahapan": "Penerapan", "tanggalInput": "06-07-2025"}, {"no": 10, "judul": "TAMARA", "pemda": "Provinsi Maluku Utara", "opd": "Biro Pengadaan Barang dan Jasa", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "komunikasi dan informatika,kearsipan", "kematangan": 92.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 11, "judul": "SI ERNI", "pemda": "Provinsi Maluku Utara", "opd": "Biro Pengadaan Barang dan Jasa", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 92.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 12, "judul": "RAISAH", "pemda": "Provinsi Maluku Utara", "opd": "Biro Pengadaan Barang dan Jasa", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pekerjaan umum dan penataan ruang,perumahan rakyat dan kawasan permukiman,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 92.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 13, "judul": "SODARA", "pemda": "Provinsi Maluku Utara", "opd": "Biro Pengadaan Barang dan Jasa", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,pekerjaan umum dan penataan ruang,perumahan rakyat dan kawasan permukiman,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 14, "judul": "ORMAS BALAPOR", "pemda": "Provinsi Maluku Utara", "opd": "Badan Kesatuan Bangsa dan Politik", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,sosial,pemberdayaan perempuan dan pelindungan anak,pemberdayaan masyarakat dan Desa,kebudayaan", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 15, "judul": "KEDAI PANGANMU", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pangan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pangan", "kematangan": 106.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 16, "judul": "Si BANKUM", "pemda": "Provinsi Maluku Utara", "opd": "Biro Hukum", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "Kepala Daerah", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 17, "judul": "SI MASTRANS (Sistem Informasi Masyarakat Transmigrasi)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Tenaga Kerja dan Transmigrasi", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "transmigrasi", "kematangan": 69.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 18, "judul": "CEGAH KUMUH", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Perumahan dan Kawasan Permukiman", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "perumahan rakyat dan kawasan permukiman,Perencanaan", "kematangan": 44.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 19, "judul": "SANTUN LAKSANA (SISTEM ADMINISTRASI TATA NASKAH LABORATORIUM KESEHATAN MASYARAKAT)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan (labkesmas)", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 20, "judul": "Biro Hukum Inovasi", "pemda": "Provinsi Maluku Utara", "opd": "Biro Hukum", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pekerjaan umum dan penataan ruang,persandian", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 21, "judul": "Lola Amaria Desa (Pengelolaan Profil Desa Melalui Babari Data Desa)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Permberdayaan Masyarakat Desa", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pemberdayaan masyarakat dan Desa,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 22, "judul": "SATRIA BIRU GASS FULL...!!! ", "pemda": "Provinsi Maluku Utara", "opd": "Satuan Polisi Pamong Praja & Kebakaran", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "ketenteraman, ketertiban umum, dan pelindungan masyarakat,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 92.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 23, "judul": "Sobat Kita", "pemda": "Provinsi Maluku Utara", "opd": "RSUD Dr. H. Chasan Boesoirie Ternate", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan,sosial", "kematangan": 0.0, "tahapan": "Inisiatif", "tanggalInput": "08-07-2025"}, {"no": 24, "judul": "TIM REAKSI CEPAT LAYANAN IT(TRC)", "pemda": "Provinsi Maluku Utara", "opd": "Biro Administrasi Pembangunan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Perencanaan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 5.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 25, "judul": "Arsitek Metal", "pemda": "Provinsi Maluku Utara", "opd": "RSUD Sofifi", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan,Kepegawaian", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 26, "judul": "Si Cantik", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kependudukan dan Pencatatan Sipil", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "KLASTER TANPA TAMBAHAN", "subKlaster": "SUB KLASTER", "urusan": "pendidikan,kesehatan,pemberdayaan perempuan dan pelindungan anak,administrasi kependudukan dan pencatatan sipil", "kematangan": 94.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 27, "judul": "Layanan Infrastruktur Jalan Usaha Tani Berbasis Swakelola dan Inovasi Sosial", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pertanian", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": "Kedaulatan Pangan", "subKlaster": "Pengembangan kawasan pangan terintegrasi", "urusan": "pekerjaan umum dan penataan ruang,tenaga kerja,pangan,pertanian", "kematangan": 3.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 28, "judul": "Stay 24", "pemda": "Provinsi Maluku Utara", "opd": "RSUD Sofifi", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 94.0, "tahapan": "Penerapan", "tanggalInput": "08-07-2025"}, {"no": 29, "judul": "SISTEM PENGELOLAHAN INFORMASI DAN DATA HARGA PANGAN ", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pertanian", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pangan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "10-07-2025"}, {"no": 30, "judul": "GOROPA", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kelautan dan Perikanan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kelautan dan perikanan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 46.0, "tahapan": "Penerapan", "tanggalInput": "10-07-2025"}, {"no": 31, "judul": "Solusi LTT Intensif dan Efisien Berbasis Kolaborasi Penyuluh dan Petani ", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pertanian", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "pangan,pertanian", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "11-07-2025"}, {"no": 32, "judul": "SIPENA (SISTEM PENDAMPINGAN INTEGRASI LAYANAN PRIMER MALUKU UTARA)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "Kepala Daerah", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan", "kematangan": 103.0, "tahapan": "Penerapan", "tanggalInput": "13-07-2025"}, {"no": 33, "judul": "BERGIZIKU (BERSAMA AKSI BERGIZI SEHAT DAN BERKEMAJUAN UNTUK NEGERI)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,kesehatan,pemberdayaan perempuan dan pelindungan anak,pangan,pemberdayaan masyarakat dan Desa,pengendalian penduduk dan keluarga berencana,komunikasi dan informatika,Perencanaan", "kematangan": 102.0, "tahapan": "Penerapan", "tanggalInput": "13-07-2025"}, {"no": 34, "judul": "Setuju Satu Data Untuk Profil Desa/Kelurahan (SESADU PRODESKEL)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Permberdayaan Masyarakat Desa", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pemberdayaan masyarakat dan Desa,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2025"}, {"no": 35, "judul": "Laporan Pengendalian Administrasi Pembangunan Setda Provinsi Maluku Utara tahun 2024", "pemda": "Provinsi Maluku Utara", "opd": "Biro Administrasi Pembangunan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 12.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2025"}, {"no": 36, "judul": "Sistem Informasi analisa  jabatan  ( Sinjab)", "pemda": "Provinsi Maluku Utara", "opd": "Biro Organisasi", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Kepegawaian,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 10.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2025"}, {"no": 37, "judul": "Lembaga Kemasyarakatan Mitra Sejati Penyelenggaraan Pemerintahan Desa (LEMSIP)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Permberdayaan Masyarakat Desa", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pemberdayaan masyarakat dan Desa,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2025"}, {"no": 38, "judul": "SIDOLA BATAGI", "pemda": "Provinsi Maluku Utara", "opd": "Badan Pendapatan Daerah", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 92.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2025"}, {"no": 39, "judul": "SIPAKA (SISTEM PEMANTAUAN LAPORAN KEUANGAN)", "pemda": "Provinsi Maluku Utara", "opd": "Inspektorat Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "komunikasi dan informatika,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 10.0, "tahapan": "Penerapan", "tanggalInput": "15-07-2025"}, {"no": 40, "judul": "DOKIS IPKD", "pemda": "Provinsi Maluku Utara", "opd": "iga2020.provinsi.maluku.utara", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "komunikasi dan informatika,Perencanaan,Keuangan,Penelitian dan Pengembangan", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "15-07-2025"}, {"no": 41, "judul": "(PEREKAT  SIBUMDES) PEMBERDAYAAN EKONOMI MASYARAKAT MELALUI REVITALISASI BUMDES", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Permberdayaan Masyarakat Desa", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pemberdayaan masyarakat dan Desa,koperasi, usaha kecil, dan menengah", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "15-07-2025"}, {"no": 42, "judul": "Cici_Novi Go Publik", "pemda": "Provinsi Maluku Utara", "opd": "iga2020.provinsi.maluku.utara", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "Penelitian dan Pengembangan", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "15-07-2025"}, {"no": 43, "judul": "SETARA (SEHATKAN EMOSI DAN TANGANI TRAUMA REMAJA)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan", "kematangan": 101.0, "tahapan": "Penerapan", "tanggalInput": "16-07-2025"}, {"no": 44, "judul": "SIASTRI", "pemda": "Provinsi Maluku Utara", "opd": "Biro Pengadaan Barang dan Jasa", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,kesehatan,pekerjaan umum dan penataan ruang,perumahan rakyat dan kawasan permukiman,sosial,kelautan dan perikanan,pertanian,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 92.0, "tahapan": "Penerapan", "tanggalInput": "16-07-2025"}, {"no": 45, "judul": "SI MANJUR (RENCANA AKSI ANGKUTAN KOTA DALAM SATU PROVINSI)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Perhubungan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "ketenteraman, ketertiban umum, dan pelindungan masyarakat,perhubungan", "kematangan": 69.0, "tahapan": "Penerapan", "tanggalInput": "16-07-2025"}, {"no": 46, "judul": "Warung Kompetensi Penyusunan Laporan Keuangan Daerah (WARKOP KEUDA)", "pemda": "Provinsi Maluku Utara", "opd": "Badan Pengelolaan Keuangan dan Aset Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "Perencanaan,Keuangan", "kematangan": 96.0, "tahapan": "Penerapan", "tanggalInput": "16-07-2025"}, {"no": 47, "judul": "KOLOLI KIE (Konsultasi Keliling Melalui Komunikasi Informasi dan Edukasi)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Permberdayaan Perempuan dan Perlindugnan Anak", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,kesehatan,sosial,pemberdayaan perempuan dan pelindungan anak", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "16-07-2025"}, {"no": 48, "judul": "INSPIRASI 3T (INOVASI PELAYANAN KESEHATAN TERPADU WILAYAH TERLUAR, TERPENCIL, DAN TERTINGGAL)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan", "kematangan": 101.0, "tahapan": "Penerapan", "tanggalInput": "17-07-2025"}, {"no": 49, "judul": "GENZ TANGGUH (Generasi Sehat, Tanggap Gizi, dan Taat TTD)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan", "kematangan": 102.0, "tahapan": "Penerapan", "tanggalInput": "17-07-2025"}, {"no": 50, "judul": "SIGAP (SINERGI GERAKAN PENGENDALIAN PENYAKIT)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan", "kematangan": 101.0, "tahapan": "Penerapan", "tanggalInput": "17-07-2025"}, {"no": 51, "judul": "Sofifi Central Park (English Version) 2023", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Perumahan dan Kawasan Permukiman", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pekerjaan umum dan penataan ruang,perumahan rakyat dan kawasan permukiman,pertanahan,lingkungan hidup,pemberdayaan masyarakat dan Desa,kebudayaan,pariwisata,Perencanaan,Penelitian dan Pengembangan", "kematangan": 88.0, "tahapan": "Penerapan", "tanggalInput": "20-07-2025"}, {"no": 52, "judul": "SI DUMAS", "pemda": "Provinsi Maluku Utara", "opd": "Inspektorat Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pemberdayaan masyarakat dan Desa,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 19.0, "tahapan": "Penerapan", "tanggalInput": "22-07-2025"}, {"no": 53, "judul": "BERNADYA (BERSAMA REHABILITASI UNTUK NYALA DAYA JIWA)", "pemda": "Provinsi Maluku Utara", "opd": "Rumah Sakit Jiwa Sofifi", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,kesehatan,sosial,pemberdayaan perempuan dan pelindungan anak,Penelitian dan Pengembangan", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "22-07-2025"}, {"no": 54, "judul": "MEETING Dengan Kawan ", "pemda": "Provinsi Maluku Utara", "opd": "Badan Pengelola Perbatasan Daerah", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan,pemberdayaan perempuan dan pelindungan anak", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "23-07-2025"}, {"no": 55, "judul": "Pengembangan Lahan Baru Hortikultura Mendukung Kemandirian Pangan", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pertanian", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "Kepala Daerah", "klasterPKPN": "Kedaulatan Pangan", "subKlaster": "Pengembangan kawasan pangan terintegrasi", "urusan": "pangan,pertanian", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "24-07-2025"}, {"no": 56, "judul": "GATRAMAS ", "pemda": "Provinsi Maluku Utara", "opd": "Satuan Polisi Pamong Praja & Kebakaran", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "ketenteraman, ketertiban umum, dan pelindungan masyarakat,sosial", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "24-07-2025"}, {"no": 57, "judul": "SAIRA", "pemda": "Provinsi Maluku Utara", "opd": "Biro Pengadaan Barang dan Jasa", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pekerjaan umum dan penataan ruang,perumahan rakyat dan kawasan permukiman,perpustakaan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 91.0, "tahapan": "Penerapan", "tanggalInput": "24-07-2025"}, {"no": 58, "judul": "AMIRA", "pemda": "Provinsi Maluku Utara", "opd": "Biro Pengadaan Barang dan Jasa", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,kesehatan,pekerjaan umum dan penataan ruang,perumahan rakyat dan kawasan permukiman,sosial,tenaga kerja,pemberdayaan perempuan dan pelindungan anak,pangan,administrasi kependudukan dan pencatatan sipil,pemberdayaan masyarakat dan Desa,perhubungan,komunikasi dan informatika,koperasi, usaha kecil, dan menengah,penanaman modal,kepemudaan dan olah raga,energi dan sumber daya mineral,Keuangan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "24-07-2025"}, {"no": 59, "judul": "SMART-BBM (Sistem Monitoring dan Analisis Real Time - Bahan Bakar Minyak)", "pemda": "Provinsi Maluku Utara", "opd": "Biro Umum", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Keuangan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "25-07-2025"}, {"no": 60, "judul": "STEREK-ASN (Sistem Terintegrasi Real-Time Evaluasi Kinerja - ASN)", "pemda": "Provinsi Maluku Utara", "opd": "Biro Umum", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Kepegawaian,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "25-07-2025"}, {"no": 61, "judul": "SABUSAKU", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pendidikan dan Kebudayaan (upt) SMAN 6 Halut", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,perpustakaan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "25-07-2025"}, {"no": 62, "judul": "SORGA", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pemuda dan Olahraga", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,kesehatan,sosial,pemberdayaan masyarakat dan Desa,koperasi, usaha kecil, dan menengah,kepemudaan dan olah raga,Pendidikan dan Pelatihan", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "25-07-2025"}, {"no": 63, "judul": "BUGAR", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pemuda dan Olahraga", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "Kepala Daerah", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,kesehatan,sosial,pemberdayaan masyarakat dan Desa,kepemudaan dan olah raga,Pendidikan dan Pelatihan", "kematangan": 63.0, "tahapan": "Penerapan", "tanggalInput": "25-07-2025"}, {"no": 64, "judul": "SHAKIRRA", "pemda": "Provinsi Maluku Utara", "opd": "Biro Pengadaan Barang dan Jasa", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "pendidikan,kesehatan,sosial,pemberdayaan perempuan dan pelindungan anak,kepemudaan dan olah raga,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 92.0, "tahapan": "Penerapan", "tanggalInput": "25-07-2025"}, {"no": 65, "judul": "SEGAR", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pemuda dan Olahraga", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kesehatan,sosial,koperasi, usaha kecil, dan menengah,kepemudaan dan olah raga", "kematangan": 45.0, "tahapan": "Penerapan", "tanggalInput": "26-07-2025"}, {"no": 66, "judul": "LAMITI (layanan mandiri izin penelitian) ", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Penanaman Modal dan Pelayanan Terpadu Satu Pintu", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": null, "subKlaster": null, "urusan": "penanaman modal,Penelitian dan Pengembangan", "kematangan": 10.0, "tahapan": "Penerapan", "tanggalInput": "27-07-2025"}, {"no": 67, "judul": "SIPIDA = SISTEM INFORMASI PENGENDALIAN INFLASI DAERAH", "pemda": "Provinsi Maluku Utara", "opd": "Biro Perekonomian", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 33.0, "tahapan": "Penerapan", "tanggalInput": "31-07-2025"}, {"no": 68, "judul": "PENGAIT DASAR PARAU", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kelautan dan Perikanan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": null, "subKlaster": null, "urusan": "kelautan dan perikanan,Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 50.0, "tahapan": "Penerapan", "tanggalInput": "31-07-2025"}, {"no": 69, "judul": "KOFOR DAERAH", "pemda": "Provinsi Maluku Utara", "opd": "Badan Perancanaan Pembangunan Daerah", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Perencanaan", "kematangan": 65.0, "tahapan": "Penerapan", "tanggalInput": "07-08-2025"}, {"no": 70, "judul": "MARIMOI", "pemda": "Provinsi Maluku Utara", "opd": "Badan Perancanaan Pembangunan Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": "Ekonomi Kerakyatan dan Desa", "subKlaster": "Percepatan Pembangunan Daerah 3T", "urusan": "Perencanaan", "kematangan": 7.0, "tahapan": "Penerapan", "tanggalInput": "24-06-2026"}, {"no": 71, "judul": "SI-FEDORA", "pemda": "Provinsi Maluku Utara", "opd": "Badan Perancanaan Pembangunan Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Perencanaan", "kematangan": 37.0, "tahapan": "Penerapan", "tanggalInput": "24-06-2026"}, {"no": 72, "judul": "TERDEPAN", "pemda": "Provinsi Maluku Utara", "opd": "Badan Perancanaan Pembangunan Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Perencanaan", "kematangan": 55.0, "tahapan": "Penerapan", "tanggalInput": "24-06-2026"}, {"no": 73, "judul": "MINI-LAB IPW", "pemda": "Provinsi Maluku Utara", "opd": "Badan Perancanaan Pembangunan Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Perencanaan", "kematangan": 3.0, "tahapan": "Penerapan", "tanggalInput": "24-06-2026"}, {"no": 74, "judul": "FOR KADA MALUT", "pemda": "Provinsi Maluku Utara", "opd": "Badan Perancanaan Pembangunan Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Perencanaan", "kematangan": 3.0, "tahapan": "Penerapan", "tanggalInput": "24-06-2026"}, {"no": 75, "judul": "FKB MALUT", "pemda": "Provinsi Maluku Utara", "opd": "Badan Perancanaan Pembangunan Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "Perencanaan", "kematangan": 3.0, "tahapan": "Penerapan", "tanggalInput": "24-06-2026"}, {"no": 76, "judul": "SI CEK-IN", "pemda": "Provinsi Maluku Utara", "opd": "Badan Perancanaan Pembangunan Daerah", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": "Penurunan Kemiskinan", "subKlaster": "PRO-KESRA Bantuan Sosial Terintegrasi", "urusan": "Perencanaan", "kematangan": 3.0, "tahapan": "Penerapan", "tanggalInput": "24-06-2026"}, {"no": 77, "judul": "SIMTARU MALUT", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pekerjaan Umum dan Penataan Ruang", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "pekerjaan umum dan penataan ruang", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "26-06-2026"}, {"no": 78, "judul": "PUSAKA MALUT", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": "Kesehatan", "subKlaster": "Pemeriksaan Kesehatan Gratis", "urusan": "kesehatan", "kematangan": 30.0, "tahapan": "Penerapan", "tanggalInput": "27-06-2026"}, {"no": 79, "judul": "PENA PROMKES ", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": "Kesehatan", "subKlaster": "Pemeriksaan Kesehatan Gratis", "urusan": "kesehatan", "kematangan": 36.0, "tahapan": "Penerapan", "tanggalInput": "27-06-2026"}, {"no": 80, "judul": "FORKAT", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "Kesehatan", "subKlaster": "Makan Bergizi Gratis Ibu Hamil, Ibu Menyusui, dan Balita", "urusan": "kesehatan", "kematangan": 36.0, "tahapan": "Penerapan", "tanggalInput": "27-06-2026"}, {"no": 81, "judul": "GEBRAK CKG", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "Kesehatan", "subKlaster": "Pemeriksaan Kesehatan Gratis", "urusan": "kesehatan", "kematangan": 30.0, "tahapan": "Penerapan", "tanggalInput": "27-06-2026"}, {"no": 82, "judul": "GEMAS", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "Kesehatan", "subKlaster": "Makan Bergizi Gratis Ibu Hamil, Ibu Menyusui, dan Balita", "urusan": "kesehatan", "kematangan": 30.0, "tahapan": "Penerapan", "tanggalInput": "27-06-2026"}, {"no": 83, "judul": "SIMONIKA PKG", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "Kesehatan", "subKlaster": "Pemeriksaan Kesehatan Gratis", "urusan": "kesehatan", "kematangan": 33.0, "tahapan": "Penerapan", "tanggalInput": "27-06-2026"}, {"no": 84, "judul": "SETARA", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kependudukan dan Pencatatan Sipil", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "Ekonomi Kerakyatan dan Desa", "subKlaster": "Percepatan Pembangunan Daerah 3T", "urusan": "administrasi kependudukan dan pencatatan sipil", "kematangan": 99.0, "tahapan": "Penerapan", "tanggalInput": "29-06-2026"}, {"no": 85, "judul": "A-LADIN (Aplikasi Layanan Cabdin)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pendidikan dan Kebudayaan (cabang) Haltim", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": "Pendidikan", "subKlaster": "Peningkatan Kesejahteraan Guru, Transfer Langsung Tunjangan", "urusan": "pendidikan", "kematangan": 93.0, "tahapan": "Penerapan", "tanggalInput": "29-06-2026"}, {"no": 86, "judul": "SIP-MAS (sistem Pengaduan Masyarakat)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "Kesehatan", "subKlaster": "Pemeriksaan Kesehatan Gratis", "urusan": "administrasi kependudukan dan pencatatan sipil", "kematangan": 0.0, "tahapan": "Inisiatif", "tanggalInput": "30-06-2026"}, {"no": 87, "judul": "LAPEHATE", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "Kepala Daerah", "klasterPKPN": "Kesehatan", "subKlaster": "Pemeriksaan Kesehatan Gratis", "urusan": "kesehatan", "kematangan": 0.0, "tahapan": "Inisiatif", "tanggalInput": "30-06-2026"}, {"no": 88, "judul": "Tabola Balee", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pekerjaan Umum dan Penataan Ruang", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "pekerjaan umum dan penataan ruang", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "01-07-2026"}, {"no": 89, "judul": "ASGUTEK SMANFOUR", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pendidikan dan Kebudayaan (upt) SMAN 4 Ternate", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": "Pendidikan", "subKlaster": "Studio Guru", "urusan": "pendidikan", "kematangan": 27.0, "tahapan": "Penerapan", "tanggalInput": "02-07-2026"}, {"no": 90, "judul": "KABATA (Kelestarian Budaya Tradisional) Jilid 2", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pendidikan dan Kebudayaan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "NON PKPN", "subKlaster": null, "urusan": "kebudayaan", "kematangan": 100.0, "tahapan": "Penerapan", "tanggalInput": "09-07-2026"}, {"no": 91, "judul": "CERIA (Cegah, Edukasi, Respons, Intervensi Awal)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "Kepala Daerah", "klasterPKPN": "Kesehatan", "subKlaster": "Pemeriksaan Kesehatan Gratis", "urusan": "kesehatan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "13-07-2026"}, {"no": 92, "judul": "SATU PESONA (Satu Tujuan Pelajar Sehat Melalui Olahraga dan Nutrisi Andal)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "Kepala Daerah", "klasterPKPN": "Kesehatan", "subKlaster": "Pemeriksaan Kesehatan Gratis", "urusan": "kesehatan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "13-07-2026"}, {"no": 93, "judul": "SEHATI (SEHATKAN JANTUNG, KENDALIKAN DIABETES, BEBASKAN TUBERKULOSIS)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kesehatan", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "Kepala Daerah", "klasterPKPN": "Kesehatan", "subKlaster": "Penuntasan Tuberkulosis", "urusan": "kesehatan", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "13-07-2026"}, {"no": 94, "judul": "MADU DPRD (Monitor Agenda Dewan terUpdate) ", "pemda": "Provinsi Maluku Utara", "opd": "Sekretariat DPRD", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "KLASTER TANPA TAMBAHAN", "subKlaster": "SUB KLASTER", "urusan": "Fungsi Penunjang lainnya sesuai dengan ketentuan peraturan perundang-undangan", "kematangan": 6.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2026"}, {"no": 95, "judul": "Pelaris Cabay (Pelestarian Cagar Budaya)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pendidikan dan Kebudayaan", "bentuk": "Inovasi Daerah lainnya sesuai dengan Urusan Pemerintahan yang menjadi kewenangan Daerah", "jenis": "Non Digital", "inisiator": "ASN", "klasterPKPN": "KLASTER TANPA TAMBAHAN", "subKlaster": "SUB KLASTER", "urusan": "kebudayaan", "kematangan": 101.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2026"}, {"no": 96, "judul": "LAHIRKU", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kependudukan dan Pencatatan Sipil", "bentuk": "Inovasi pelayanan publik", "jenis": "Non Digital", "inisiator": "OPD", "klasterPKPN": "KLASTER TANPA TAMBAHAN", "subKlaster": "SUB KLASTER", "urusan": "administrasi kependudukan dan pencatatan sipil", "kematangan": 64.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2026"}, {"no": 97, "judul": "PERMATA (Pelayanan Pernikahan Masyarakat Tercatat)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Kependudukan dan Pencatatan Sipil", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "Ekonomi Kerakyatan dan Desa", "subKlaster": "Percepatan Pembangunan Daerah 3T", "urusan": "administrasi kependudukan dan pencatatan sipil", "kematangan": 57.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2026"}, {"no": 98, "judul": "SI REKAP (Sistem Informasi Rekapitulasi Administrasi Perjalanan)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Pendidikan dan Kebudayaan", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "ASN", "klasterPKPN": "KLASTER TANPA TAMBAHAN", "subKlaster": "SUB KLASTER", "urusan": "pendidikan", "kematangan": 0.0, "tahapan": "Uji Coba", "tanggalInput": "14-07-2026"}, {"no": 99, "judul": "PERMATA (Pendataan Rumah Pasca Bencana Berbasis Partisipasi Masyarakat)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Perumahan dan Kawasan Permukiman", "bentuk": "Inovasi tata kelola pemerintahan daerah", "jenis": "Digital", "inisiator": "Kepala Daerah", "klasterPKPN": "Infrastruktur Perumahan dan Ketahanan Bencana", "subKlaster": "3 Juta Rumah: 1 Juta Baru & 2 Juta Renovasi Rumah", "urusan": "perumahan rakyat dan kawasan permukiman", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "14-07-2026"}, {"no": 100, "judul": "Transformasi Elektrifikasi Rakyat melalui Akses Nyala Gratis (TERAS SOFIFI)", "pemda": "Provinsi Maluku Utara", "opd": "Dinas Energi dan Sumber Daya Mineral", "bentuk": "Inovasi pelayanan publik", "jenis": "Digital", "inisiator": "OPD", "klasterPKPN": "Kemandirian Energi dan Air", "subKlaster": "Kompor Listrik untuk 2-5 Juta Rumah Tangga", "urusan": "energi dan sumber daya mineral", "kematangan": 0.0, "tahapan": "Penerapan", "tanggalInput": "16-07-2026"}];
+
+const YANDAS = [
+  {key:'kesehatan', opdMatch:['dinas kesehatan'], label:'Kesehatan', dinas:'Dinas Kesehatan'},
+  {key:'pendidikan', opdMatch:['dinas pendidikan dan kebudayaan'], label:'Pendidikan dan Kebudayaan', dinas:'Dinas Pendidikan dan Kebudayaan'},
+  {key:'pu', opdMatch:['dinas pekerjaan umum dan penataan ruang'], label:'Pekerjaan Umum & Penataan Ruang', dinas:'Dinas Pekerjaan Umum dan Penataan Ruang'},
+  {key:'perkim', opdMatch:['dinas perumahan dan kawasan permukiman'], label:'Perumahan Rakyat & Kawasan Permukiman', dinas:'Dinas Perumahan dan Kawasan Permukiman'},
+  {key:'sosial', opdMatch:['dinas sosial'], label:'Sosial', dinas:'Dinas Sosial'},
+  {key:'satpol', opdMatch:['satuan polisi pamong praja','satpol pp'], label:'Trantibum & Perlindungan Masyarakat', dinas:'Satuan Polisi Pamong Praja (Satpol PP)'},
+];
+function opdMatchesYandas(opd, y){
+  const o = (opd||'').toLowerCase();
+  return y.opdMatch.some(kw => o.includes(kw));
+}
+const PALETTE = ['#1F6F78','#C1811E','#12203B','#8A3324','#5C8A99','#D8A75B','#7D8AA6','#3E5C76'];
+
+// ---------------- Portable storage layer ----------------
+// Uses window.storage when running inside a Claude artifact (syncs with the user's
+// Claude account). When this file is hosted anywhere else, window.storage does not
+// exist, so we transparently fall back to the browser's own localStorage instead —
+// the app keeps working, it just remembers data per browser/device rather than
+// centrally. See the "Riwayat" and verification panels for what gets stored.
+const HAS_CLAUDE_STORAGE = (typeof window !== 'undefined' && !!window.storage);
+const Store = {
+  mode: HAS_CLAUDE_STORAGE ? 'claude' : 'local',
+  async get(key){
+    if(HAS_CLAUDE_STORAGE){
+      try{ const r = await window.storage.get(key, false); return r ? r.value : null; }catch(e){ return null; }
+    }
+    try{ return localStorage.getItem(key); }catch(e){ return null; }
+  },
+  async set(key, value){
+    if(HAS_CLAUDE_STORAGE){
+      try{ await window.storage.set(key, value, false); return true; }catch(e){ console.warn(e); }
+    }
+    try{ localStorage.setItem(key, value); return true; }catch(e){ console.warn(e); return false; }
+  },
+  async del(key){
+    if(HAS_CLAUDE_STORAGE){
+      try{ await window.storage.delete(key, false); return true; }catch(e){ console.warn(e); }
+    }
+    try{ localStorage.removeItem(key); return true; }catch(e){ return false; }
+  },
+  async listKeys(prefix){
+    if(HAS_CLAUDE_STORAGE){
+      try{ const r = await window.storage.list(prefix, false); return (r && r.keys) ? r.keys : []; }catch(e){ return []; }
+    }
+    try{
+      const keys = [];
+      for(let i=0;i<localStorage.length;i++){ const k = localStorage.key(i); if(k && k.indexOf(prefix)===0) keys.push(k); }
+      return keys;
+    }catch(e){ return []; }
+  }
+};
+
+let state = {
+  rows: [],
+  sortKey: 'no',
+  sortDir: 1,
+  page: 1,
+  pageSize: 12,
+  charts: {},
+};
+
+function parseDateDMY(s){
+  if(!s) return null;
+  const parts = String(s).split(/[-\/]/);
+  if(parts.length!==3) return null;
+  let [d,m,y] = parts;
+  if(y.length===2) y = '20'+y;
+  const dt = new Date(parseInt(y), parseInt(m)-1, parseInt(d));
+  return isNaN(dt.getTime()) ? null : dt;
+}
+
+function normalizeRow(r, idx){
+  const kematangan = (r.kematangan===null||r.kematangan===undefined||isNaN(r.kematangan)) ? 0 : Number(r.kematangan);
+  const urusan = (r.urusan||'').toString();
+  const opd = (r.opd||r['Admin OPD']||'').toString().trim();
+  const klaster = r.klasterPKPN || r['Klaster PKPN'] || null;
+  const tahapan = r.tahapan || r['Tahapan Inovasi'] || '-';
+  const tglRaw = r.tanggalInput || r['Tanggal Input'] || null;
+  const tgl = parseDateDMY(tglRaw);
+  const reasons = [];
+  if(kematangan===0) reasons.push({sev:'crit', text:'Skor kelengkapan 0'});
+  if(!klaster) reasons.push({sev:'warn', text:'Klaster PKPN kosong'});
+  if(!urusan || urusan.trim()==='') reasons.push({sev:'crit', text:'Urusan pemerintahan kosong'});
+  if(!opd || opd==='—') reasons.push({sev:'warn', text:'OPD pengampu kosong'});
+  return {
+    no: r.no ?? (idx+1),
+    judul: r.judul || r['Judul Inovasi'] || '(tanpa judul)',
+    pemda: r.pemda || r['Pemda'] || '',
+    opd: opd || '—',
+    bentuk: r.bentuk || r['Bentuk Inovasi'] || '—',
+    jenis: r.jenis || r['Jenis'] || '—',
+    inisiator: r.inisiator || r['Inisiator'] || '—',
+    klasterPKPN: klaster,
+    urusan: urusan,
+    kematangan: kematangan,
+    tahapan: tahapan,
+    tanggalInputRaw: tglRaw,
+    tanggalInput: tgl,
+    reasons: reasons,
+    flagged: reasons.length>0,
+    severity: reasons.some(x=>x.sev==='crit') ? 'crit' : (reasons.length? 'warn':'none'),
+  };
+}
+
+function loadRows(raw){
+  state.rows = raw.map(normalizeRow);
+  state.page = 1;
+  renderAll();
+}
+
+// ---------------- File upload ----------------
+document.getElementById('uploadBtn').addEventListener('click', ()=> {
+  if(typeof XLSX === 'undefined'){
+    showToast('Pembaca file (XLSX) tidak dapat dimuat — periksa koneksi internet perangkat ini.');
+    return;
+  }
+  document.getElementById('fileInput').click();
+});
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    try{
+      const wb = XLSX.read(evt.target.result, {type:'array', cellDates:false});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet, {defval:null, raw:false});
+      const mapped = json.map(r => ({
+        no: r['No'], judul: r['Judul Inovasi'], pemda: r['Pemda'], opd: r['Admin OPD'],
+        bentuk: r['Bentuk Inovasi'], jenis: r['Jenis'], inisiator: r['Inisiator'],
+        klasterPKPN: r['Klaster PKPN'], subKlaster: r['Sub Klaster PKPN'],
+        urusan: r['Urusan Pemerintah'], kematangan: r['Kematangan'],
+        tahapan: r['Tahapan Inovasi'], tanggalInput: r['Tanggal Input'],
+      }));
+      loadRows(mapped);
+      setStatus('good', 'Data termuat: ' + mapped.length + ' inovasi (' + file.name + ')');
+      showToast('Berhasil memuat ' + mapped.length + ' baris dari ' + file.name);
+    }catch(err){
+      console.error(err);
+      showToast('Gagal membaca file. Pastikan format sesuai template.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value = '';
+});
+
+function setStatus(kind, text){
+  const pill = document.getElementById('statusPill');
+  pill.className = 'pill' + (kind==='good'?'':' dot-'+kind);
+  document.getElementById('statusText').textContent = text;
+}
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
+// ---------------- Tabs ----------------
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('view-'+tab.dataset.view).classList.add('active');
+  });
+});
+
+// ---------------- Render: overview ----------------
+function renderAll(){
+  renderKPI();
+  renderYandas();
+  renderVerifikasi();
+  renderTableControls();
+  renderTable();
+  renderTindakLanjut();
+  document.getElementById('cntData').textContent = state.rows.length;
+  document.getElementById('cntTL').textContent = state.rows.filter(r=>r.flagged).length;
+  try{
+    if(typeof Chart === 'undefined') throw new Error('Chart.js belum termuat');
+    renderCharts();
+  }catch(err){
+    console.warn('Grafik tidak dapat ditampilkan:', err);
+    document.querySelectorAll('.chart-wrap').forEach(el=>{
+      el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--ink-faint);font-size:12px;text-align:center;padding:0 20px;">Pustaka grafik (Chart.js) tidak berhasil dimuat dari internet. Coba muat ulang halaman, atau periksa apakah jaringan/proxy memblokir cdnjs.cloudflare.com. Data pada tab lain tetap berfungsi normal.</div>';
+    });
+  }
+}
+
+function renderKPI(){
+  const rows = state.rows;
+  const total = rows.length;
+  const tahap = k => rows.filter(r=>(r.tahapan||'').toLowerCase().includes(k)).length;
+  const avgK = total? (rows.reduce((a,r)=>a+r.kematangan,0)/total) : 0;
+  const zero = rows.filter(r=>r.kematangan===0).length;
+  const over90 = rows.filter(r=>r.kematangan>90).length;
+  const over99 = rows.filter(r=>r.kematangan>99).length;
+  const opdCount = new Set(rows.map(r=>r.opd).filter(x=>x&&x!=='—')).size;
+  const kpis = [
+    {lbl:'Total Inovasi', val: total, sub: opdCount + ' perangkat daerah terlibat'},
+    {lbl:'Tahap Penerapan', val: tahap('penerapan'), sub: total? Math.round(tahap('penerapan')/total*100)+'% dari total':'—'},
+    {lbl:'Tahap Uji Coba / Inisiatif', val: tahap('uji')+tahap('inisiatif'), sub:'Masih dalam pengembangan'},
+    {lbl:'Rata-rata Skor Kelengkapan', val: avgK.toFixed(1), sub: avgK>=60?'Cukup baik':'Perlu didorong', cls: avgK>=60?'good':'bad'},
+    {lbl:'Skor Kelengkapan = 0', val: zero, sub: zero>0 ? 'Segera lengkapi bukti dukung' : 'Semua sudah punya skor awal', cls: zero>0?'bad':'good'},
+    {lbl:'Skor Kematangan > 90', val: over90, sub: over90>0? 'Klik untuk verifikasi ↓':'Belum ada', cls: over90>0?'warn-kpi':'', id:'kpiOver90'},
+    {lbl:'Skor Kematangan > 99', val: over99, sub: over99>0? 'Klik untuk verifikasi ↓':'Belum ada', cls: over99>0?'bad':'good', id:'kpiOver99'},
+  ];
+  document.getElementById('kpiRow').innerHTML = kpis.map(k=>`
+    <div class="kpi${k.id?' kpi-click':''}" ${k.id?`id="${k.id}"`:''}>
+      <div class="lbl">${k.lbl}</div>
+      <div class="val">${k.val}</div>
+      <div class="sub ${k.cls||''}">${k.sub}</div>
+    </div>`).join('');
+  const k90 = document.getElementById('kpiOver90'); if(k90) k90.onclick = ()=> document.getElementById('verifSection').scrollIntoView({behavior:'smooth', block:'start'});
+  const k99 = document.getElementById('kpiOver99'); if(k99) k99.onclick = ()=> document.getElementById('verifSection').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderYandas(){
+  const rows = state.rows;
+  const counts = YANDAS.map(y => ({...y, count: rows.filter(r=>opdMatchesYandas(r.opd, y)).length}));
+  const metCount = counts.filter(c=>c.count>0).length;
+  const ok = metCount >= 5;
+  const html = `
+    <div class="yandas-banner ${ok?'ok':'bad'}">
+      <div>
+        <div class="big">${ok? 'Syarat Minimum Terpenuhi':'Syarat Minimum Belum Terpenuhi'}</div>
+        <div style="font-size:12.5px; margin-top:2px;">${metCount} dari 6 Urusan Wajib Pelayanan Dasar sudah tercakup (syarat minimal 5/6 sesuai Pedoman Umum IID 2026)</div>
+      </div>
+      <div class="mono" style="font-size:26px; font-weight:700;">${metCount}/6</div>
+    </div>
+    <div class="yandas-list">
+      ${counts.map(c=>`
+        <div class="yandas-item ${c.count>0?'yes':'no'}">
+          <div class="check">${c.count>0?'✓':'!'}</div>
+          <div style="flex:1;">
+            <div class="txt">${c.label}</div>
+            <div class="cnt">${c.count} inovasi</div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('yandasBox').innerHTML = html;
+}
+
+function destroyChart(key){ if(state.charts[key]){ state.charts[key].destroy(); delete state.charts[key]; } }
+
+function safeChart(key, canvasId, builder){
+  const el = document.getElementById(canvasId);
+  try{
+    destroyChart(key);
+    state.charts[key] = builder(el);
+  }catch(err){
+    console.error('Gagal membuat grafik "'+key+'":', err);
+    if(el && el.parentElement){
+      el.parentElement.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--bad);font-size:11.5px;text-align:center;padding:0 20px;">Grafik "'+key+'" gagal ditampilkan.<br>('+ (err && err.message ? err.message : 'kesalahan tidak diketahui') +')</div>';
+    }
+  }
+}
+
+function renderCharts(){
+  const rows = state.rows;
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.color = '#586178';
+
+  // Bentuk
+  safeChart('bentuk','chartBentuk', el=>{
+    const bentukMap = {};
+    rows.forEach(r=>{ const k=(r.bentuk||'—').replace('Inovasi ',''); bentukMap[k]=(bentukMap[k]||0)+1; });
+    return new Chart(el, {
+      type:'doughnut',
+      data:{ labels:Object.keys(bentukMap), datasets:[{data:Object.values(bentukMap), backgroundColor:PALETTE, borderWidth:2, borderColor:'#fff'}] },
+      options:{ plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:10.5}, padding:12}}}, cutout:'62%', maintainAspectRatio:false }
+    });
+  });
+
+  // Jenis
+  safeChart('jenis','chartJenis', el=>{
+    const jenisMap = {};
+    rows.forEach(r=>{ const k=r.jenis||'—'; jenisMap[k]=(jenisMap[k]||0)+1; });
+    return new Chart(el, {
+      type:'bar',
+      data:{ labels:Object.keys(jenisMap), datasets:[{data:Object.values(jenisMap), backgroundColor:'#1F6F78', borderRadius:6, maxBarThickness:56}] },
+      options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, grid:{color:'#EFEBDD'}}, x:{grid:{display:false}}}, maintainAspectRatio:false }
+    });
+  });
+
+  // Top OPD
+  safeChart('opd','chartOPD', el=>{
+    const opdMap = {};
+    rows.forEach(r=>{ if(r.opd && r.opd!=='—') opdMap[r.opd]=(opdMap[r.opd]||0)+1; });
+    const opdSorted = Object.entries(opdMap).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    return new Chart(el, {
+      type:'bar',
+      data:{ labels:opdSorted.map(x=>x[0].length>28? x[0].slice(0,26)+'…':x[0]), datasets:[{data:opdSorted.map(x=>x[1]), backgroundColor:'#C1811E', borderRadius:5}] },
+      options:{ indexAxis:'y', plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true, grid:{color:'#EFEBDD'}}, y:{grid:{display:false}, ticks:{font:{size:10.5}}}}, maintainAspectRatio:false }
+    });
+  });
+
+  // Kematangan distribution
+  safeChart('kematangan','chartKematangan', el=>{
+    const bins = [{l:'0', min:0, max:0.001},{l:'1–25', min:1, max:25},{l:'26–50', min:26, max:50},{l:'51–75', min:51, max:75},{l:'76+', min:76, max:Infinity}];
+    const binCounts = bins.map(b=>rows.filter(r=>r.kematangan>=b.min && r.kematangan<b.max).length);
+    return new Chart(el, {
+      type:'bar',
+      data:{ labels:bins.map(b=>b.l), datasets:[{data:binCounts, backgroundColor:['#8A3324','#B8801A','#C1811E','#5C8A99','#1F6F78'], borderRadius:6}] },
+      options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, grid:{color:'#EFEBDD'}}, x:{grid:{display:false}}}, maintainAspectRatio:false }
+    });
+  });
+
+  // Trend by month
+  safeChart('tren','chartTren', el=>{
+    const monthMap = {};
+    rows.forEach(r=>{
+      if(!r.tanggalInput) return;
+      const key = r.tanggalInput.getFullYear()+'-'+String(r.tanggalInput.getMonth()+1).padStart(2,'0');
+      monthMap[key] = (monthMap[key]||0)+1;
+    });
+    const monthKeys = Object.keys(monthMap).sort();
+    return new Chart(el, {
+      type:'line',
+      data:{ labels:monthKeys, datasets:[{data:monthKeys.map(k=>monthMap[k]), borderColor:'#1F6F78', backgroundColor:'rgba(31,111,120,.12)', fill:true, tension:.35, pointRadius:3, pointBackgroundColor:'#1F6F78'}] },
+      options:{ plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, grid:{color:'#EFEBDD'}}, x:{grid:{display:false}}}, maintainAspectRatio:false }
+    });
+  });
+}
+
+// ---------------- Data table ----------------
+const COLUMNS = [
+  {key:'no', label:'No', w:'46px'},
+  {key:'judul', label:'Judul Inovasi'},
+  {key:'opd', label:'OPD Pengampu'},
+  {key:'bentuk', label:'Bentuk'},
+  {key:'jenis', label:'Jenis'},
+  {key:'tahapan', label:'Tahapan'},
+  {key:'kematangan', label:'Kelengkapan'},
+  {key:'klasterPKPN', label:'Klaster PKPN'},
+  {key:'tanggalInputRaw', label:'Tgl Input'},
+];
+
+function uniqueVals(key){
+  return [...new Set(state.rows.map(r=>r[key]).filter(v=>v && v!=='—'))].sort();
+}
+
+function renderTableControls(){
+  const fillSelect = (id, vals) => {
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    sel.innerHTML = sel.querySelector('option').outerHTML + vals.map(v=>`<option value="${v}">${v}</option>`).join('');
+    sel.value = vals.includes(current) ? current : '';
+  };
+  fillSelect('filterTahapan', uniqueVals('tahapan'));
+  fillSelect('filterJenis', uniqueVals('jenis'));
+  fillSelect('filterBentuk', uniqueVals('bentuk'));
+
+  document.getElementById('tableHead').innerHTML = COLUMNS.map(c=>
+    `<th data-key="${c.key}" style="${c.w?'width:'+c.w:''}">${c.label} <span class="arrow">${state.sortKey===c.key ? (state.sortDir>0?'▲':'▼') : ''}</span></th>`
+  ).join('');
+  document.querySelectorAll('#tableHead th').forEach(th=>{
+    th.onclick = ()=>{
+      const k = th.dataset.key;
+      if(state.sortKey===k) state.sortDir *= -1; else { state.sortKey=k; state.sortDir=1; }
+      state.page = 1;
+      renderTable();
+      renderTableControls();
+    };
+  });
+}
+
+function getFilteredRows(){
+  const q = document.getElementById('searchBox').value.toLowerCase().trim();
+  const fT = document.getElementById('filterTahapan').value;
+  const fJ = document.getElementById('filterJenis').value;
+  const fB = document.getElementById('filterBentuk').value;
+  const fF = document.getElementById('filterFlag').value;
+  let rows = state.rows.filter(r=>{
+    if(q && !(r.judul.toLowerCase().includes(q) || r.opd.toLowerCase().includes(q) || r.urusan.toLowerCase().includes(q))) return false;
+    if(fT && r.tahapan!==fT) return false;
+    if(fJ && r.jenis!==fJ) return false;
+    if(fB && r.bentuk!==fB) return false;
+    if(fF==='flag' && !r.flagged) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    let va=a[state.sortKey], vb=b[state.sortKey];
+    if(typeof va==='string') va=va.toLowerCase();
+    if(typeof vb==='string') vb=vb.toLowerCase();
+    if(va<vb) return -1*state.sortDir;
+    if(va>vb) return 1*state.sortDir;
+    return 0;
+  });
+  return rows;
+}
+
+function tahapanBadge(t){
+  const tl = (t||'').toLowerCase();
+  let cls = 'inisiatif';
+  if(tl.includes('penerapan')) cls='penerapan';
+  else if(tl.includes('uji')) cls='ujicoba';
+  return `<span class="badge ${cls}">${t}</span>`;
+}
+
+function renderTable(){
+  const rows = getFilteredRows();
+  const totalPages = Math.max(1, Math.ceil(rows.length/state.pageSize));
+  state.page = Math.min(state.page, totalPages);
+  const start = (state.page-1)*state.pageSize;
+  const pageRows = rows.slice(start, start+state.pageSize);
+
+  document.getElementById('tableBody').innerHTML = pageRows.map(r=>{
+    const rowCls = r.severity==='crit' ? 'flag-bad' : (r.severity==='warn' ? 'flag-warn':'');
+    return `<tr class="${rowCls}" title="${r.reasons.map(x=>x.text).join(' · ')}">
+      <td class="mono">${r.no}</td>
+      <td style="max-width:280px;">${r.judul}</td>
+      <td>${r.opd}</td>
+      <td style="max-width:160px;">${(r.bentuk||'').replace('Inovasi ','')}</td>
+      <td>${r.jenis}</td>
+      <td>${tahapanBadge(r.tahapan)}</td>
+      <td><span class="kmt-bar"><span class="kmt-bar-fill" style="width:${r.kematangan}%"></span></span><span class="mono">${r.kematangan}</span></td>
+      <td>${r.klasterPKPN || '<span style="color:var(--bad)">Kosong</span>'}</td>
+      <td class="mono">${r.tanggalInputRaw||'—'}</td>
+    </tr>`;
+  }).join('') || `<tr><td colspan="9" style="text-align:center; padding:30px; color:var(--ink-faint);">Tidak ada data yang cocok dengan filter.</td></tr>`;
+
+  document.getElementById('pagination').innerHTML = `
+    <span>Menampilkan ${rows.length? start+1:0}–${Math.min(start+state.pageSize, rows.length)} dari ${rows.length} inovasi</span>
+    <button class="btn btn-outline btn-sm" id="prevPage" ${state.page<=1?'disabled':''}>‹ Sebelumnya</button>
+    <span class="mono">Hal ${state.page}/${totalPages}</span>
+    <button class="btn btn-outline btn-sm" id="nextPage" ${state.page>=totalPages?'disabled':''}>Berikutnya ›</button>`;
+  const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
+  if(prevBtn) prevBtn.onclick = ()=>{ state.page--; renderTable(); };
+  if(nextBtn) nextBtn.onclick = ()=>{ state.page++; renderTable(); };
+}
+
+['searchBox','filterTahapan','filterJenis','filterBentuk','filterFlag'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', ()=>{ state.page=1; renderTable(); });
+});
+document.getElementById('resetFilters').addEventListener('click', ()=>{
+  document.getElementById('searchBox').value='';
+  document.getElementById('filterTahapan').value='';
+  document.getElementById('filterJenis').value='';
+  document.getElementById('filterBentuk').value='';
+  document.getElementById('filterFlag').value='';
+  state.page=1; renderTable();
+});
+document.getElementById('exportCsv').addEventListener('click', ()=>{
+  const rows = getFilteredRows();
+  const headers = ['No','Judul Inovasi','OPD','Bentuk','Jenis','Tahapan','Kematangan','Klaster PKPN','Tanggal Input'];
+  const csvRows = rows.map(r=>[r.no, r.judul, r.opd, r.bentuk, r.jenis, r.tahapan, r.kematangan, r.klasterPKPN||'', r.tanggalInputRaw||'']
+    .map(v=>`"${String(v).replace(/"/g,'""')}"`).join(','));
+  const csv = [headers.join(','), ...csvRows].join('\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'inovasi_malut_filtered_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV berhasil diunduh (' + rows.length + ' baris)');
+});
+
+// ---------------- Tindak lanjut ----------------
+function renderTindakLanjut(){
+  const flagged = state.rows.filter(r=>r.flagged).sort((a,b)=> (a.severity==='crit'?0:1) - (b.severity==='crit'?0:1));
+  if(flagged.length===0){
+    document.getElementById('tlList').innerHTML = `<div class="empty-state"><div class="icon">✓</div><p>Semua inovasi sudah memenuhi kelengkapan data dasar. Kerja bagus!</p></div>`;
+    return;
+  }
+  document.getElementById('tlList').innerHTML = flagged.map(r=>`
+    <div class="tl-item">
+      <div class="tl-sev ${r.severity==='crit'?'crit':'warn'}"></div>
+      <div class="tl-body">
+        <div class="tl-title">${r.judul}</div>
+        <div class="tl-meta">${r.opd} · ${r.tahapan} · Skor kelengkapan: ${r.kematangan}</div>
+        <div class="tl-reasons">
+          ${r.reasons.map(x=>`<span class="tl-reason ${x.sev}">${x.text}</span>`).join('')}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ---------------- Verifikasi Skor Kematangan Tinggi ----------------
+const VERIF_OPTIONS = [
+  {v:'belum', label:'Belum Diverifikasi', cls:'st-belum'},
+  {v:'valid', label:'✓ Terverifikasi - Sesuai Bukti', cls:'st-valid'},
+  {v:'revisi', label:'⚠ Perlu Revisi - Skor Tak Sesuai Bukti', cls:'st-revisi'},
+  {v:'anomali', label:'✕ Data Anomali - Perlu Dikoreksi', cls:'st-anomali'},
+];
+function simpleHash(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31+str.charCodeAt(i))|0; } return Math.abs(h).toString(36); }
+function verifKey(row){
+  const slug = (row.judul||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,60);
+  return 'verif:' + (slug||'x') + '-' + simpleHash(row.judul + '|' + row.opd);
+}
+
+async function loadVerifMap(){
+  const map = {};
+  try{
+    const keys = await Store.listKeys('verif:');
+    if(keys.length){
+      await Promise.all(keys.map(async k=>{
+        const v = await Store.get(k);
+        if(v!==null && v!==undefined) map[k] = v;
+      }));
+    }
+  }catch(e){ console.warn('Penyimpanan verifikasi tidak tersedia:', e); }
+  return map;
+}
+
+async function setVerifStatus(key, status){
+  const ok = await Store.set(key, status);
+  if(!ok) showToast('Gagal menyimpan status verifikasi.');
+}
+
+function verifItemHtml(r, key, currentStatus, sevClass){
+  const opts = VERIF_OPTIONS.map(o=>`<option value="${o.v}" ${o.v===currentStatus?'selected':''}>${o.label}</option>`).join('');
+  const curCls = (VERIF_OPTIONS.find(o=>o.v===currentStatus)||VERIF_OPTIONS[0]).cls;
+  return `<div class="verif-item">
+    <div class="verif-info">
+      <div class="verif-title">${r.judul}</div>
+      <div class="verif-meta">${r.opd} · ${r.tahapan}${r.klasterPKPN? ' · '+r.klasterPKPN:''}</div>
+    </div>
+    <div class="verif-score ${sevClass}">${r.kematangan}</div>
+    <div class="verif-controls">
+      <select class="verif-select ${curCls}" data-key="${key}">${opts}</select>
+    </div>
+  </div>`;
+}
+
+async function renderVerifikasi(){
+  const rows = state.rows;
+  const over99 = rows.filter(r=>r.kematangan>99).sort((a,b)=>b.kematangan-a.kematangan);
+  const over90 = rows.filter(r=>r.kematangan>90 && r.kematangan<=99).sort((a,b)=>b.kematangan-a.kematangan);
+  const verifMap = await loadVerifMap();
+
+  const countDone = list => list.filter(r=>{
+    const st = verifMap[verifKey(r)];
+    return st && st!=='belum';
+  }).length;
+
+  const panel99 = `
+    <div class="verif-panel crit">
+      <div class="verif-panel-head">
+        <h3>🔴 Verifikasi Skor &gt; 99 — Kemungkinan Anomali Data</h3>
+        <span class="verif-progress">${countDone(over99)}/${over99.length} diverifikasi</span>
+      </div>
+      <div class="verif-panel-sub">Skala skor kelengkapan resmi 0–100. Nilai di atas 99 (apalagi di atas 100) sangat mungkin salah input dan wajib dicek ulang oleh OPD sebelum data ini dikirim ke Kemendagri.</div>
+      ${over99.length===0 ? '<div class="verif-empty">Tidak ada inovasi dengan skor di atas 99.</div>' :
+        over99.map(r=>verifItemHtml(r, verifKey(r), verifMap[verifKey(r)]||'belum', 'crit')).join('')}
+    </div>`;
+
+  const panel90 = `
+    <div class="verif-panel warn">
+      <div class="verif-panel-head">
+        <h3>🟡 Verifikasi Skor 90–99 — Kandidat Sangat Inovatif</h3>
+        <span class="verif-progress">${countDone(over90)}/${over90.length} diverifikasi</span>
+      </div>
+      <div class="verif-panel-sub">Inovasi dengan skor setinggi ini berpeluang mengangkat predikat Pemda. Pastikan seluruh bukti dukung 20 indikator SID benar-benar sesuai klaim sebelum ditetapkan sebagai unggulan.</div>
+      ${over90.length===0 ? '<div class="verif-empty">Tidak ada inovasi dengan skor 90–99.</div>' :
+        over90.map(r=>verifItemHtml(r, verifKey(r), verifMap[verifKey(r)]||'belum', 'warn')).join('')}
+    </div>`;
+
+  document.getElementById('verifSection').innerHTML = panel99 + panel90;
+
+  document.querySelectorAll('.verif-select').forEach(sel=>{
+    sel.addEventListener('change', async (e)=>{
+      const key = e.target.dataset.key;
+      const val = e.target.value;
+      await setVerifStatus(key, val);
+      const opt = VERIF_OPTIONS.find(o=>o.v===val);
+      e.target.className = 'verif-select ' + opt.cls;
+      renderVerifikasi();
+      showToast('Status verifikasi tersimpan: ' + opt.label.replace(/[✓⚠✕] /,''));
+    });
+  });
+}
+
+// ---------------- Snapshots / Riwayat ----------------
+async function getSnapshots(){
+  try{
+    const keys = await Store.listKeys('snapshot:');
+    if(!keys.length) return [];
+    const items = await Promise.all(keys.map(async k=>{
+      const v = await Store.get(k);
+      try{ return v ? JSON.parse(v) : null; }catch(e){ return null; }
+    }));
+    return items.filter(Boolean).sort((a,b)=> new Date(a.date) - new Date(b.date));
+  }catch(e){ console.warn('storage unavailable', e); return []; }
+}
+
+async function saveSnapshot(){
+  const rows = state.rows;
+  if(rows.length===0){ showToast('Tidak ada data untuk disimpan.'); return; }
+  const total = rows.length;
+  const avgK = total? (rows.reduce((a,r)=>a+r.kematangan,0)/total) : 0;
+  const zero = rows.filter(r=>r.kematangan===0).length;
+  const penerapan = rows.filter(r=>(r.tahapan||'').toLowerCase().includes('penerapan')).length;
+  const opdCount = new Set(rows.map(r=>r.opd).filter(x=>x&&x!=='—')).size;
+  const now = new Date();
+  const snap = {
+    id: 'snapshot:'+now.getTime(),
+    date: now.toISOString(),
+    total, avgK: Number(avgK.toFixed(1)), zero, penerapan, opdCount,
+    flagged: rows.filter(r=>r.flagged).length,
+  };
+  const ok = await Store.set(snap.id, JSON.stringify(snap));
+  if(ok){
+    showToast('Snapshot tersimpan: ' + total + ' inovasi pada ' + now.toLocaleDateString('id-ID'));
+    renderRiwayat();
+  }else{
+    showToast('Penyimpanan riwayat tidak tersedia di browser ini.');
+  }
+}
+document.getElementById('snapshotBtn').addEventListener('click', saveSnapshot);
+
+function fmtDelta(curr, prev, decimals=0){
+  if(prev===undefined || prev===null) return `<span class="delta flat">baseline</span>`;
+  const d = curr - prev;
+  if(Math.abs(d) < (decimals? 0.05:1)) return `<span class="delta flat">±0</span>`;
+  const sign = d>0 ? '▲' : '▼';
+  const cls = d>0 ? 'up' : 'down';
+  return `<span class="delta ${cls}">${sign} ${Math.abs(d).toFixed(decimals)}</span>`;
+}
+
+async function renderRiwayat(){
+  const snaps = await getSnapshots();
+  document.getElementById('cntSnap').textContent = snaps.length;
+  const box = document.getElementById('snapList');
+  if(snaps.length===0){
+    box.innerHTML = `<div class="empty-state"><div class="icon">🗂</div><p>Belum ada riwayat tersimpan. Klik "Simpan Snapshot" di pojok kanan atas setiap kali Anda memperbarui data untuk mulai memantau perkembangan dari waktu ke waktu.</p></div>`;
+    return;
+  }
+  const rowsHtml = snaps.slice().reverse().map((s, i)=>{
+    const prev = snaps[snaps.length-2-i];
+    return `<div class="snap-row">
+      <div class="mono">${new Date(s.date).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}</div>
+      <div class="mono" style="color:var(--ink-faint); font-size:11px;">${new Date(s.date).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</div>
+      <div><b class="mono">${s.total}</b> total ${fmtDelta(s.total, prev? prev.total: undefined)}</div>
+      <div><b class="mono">${s.avgK}</b> rata² ${fmtDelta(s.avgK, prev? prev.avgK: undefined, 1)}</div>
+      <div><b class="mono">${s.zero}</b> skor 0 ${fmtDelta(s.zero, prev? prev.zero: undefined)}</div>
+      <div class="mono">${s.opdCount} OPD</div>
+      <button class="trash-btn" data-id="${s.id}" title="Hapus snapshot ini">✕</button>
+    </div>`;
+  }).join('');
+  box.innerHTML = `
+    <div class="scroll-hint">Geser ke samping untuk melihat semua kolom di layar kecil →</div>
+    <div class="snap-scroll">
+    <div class="snap-row head">
+      <div>Tanggal</div><div>Waktu</div><div>Total Inovasi</div><div>Rata² Skor</div><div>Skor = 0</div><div>OPD</div><div></div>
+    </div>` + rowsHtml + `</div>`;
+  box.querySelectorAll('.trash-btn').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const ok = await Store.del(btn.dataset.id);
+      if(ok){ renderRiwayat(); showToast('Snapshot dihapus.'); }
+      else{ showToast('Gagal menghapus snapshot.'); }
+    });
+  });
+}
+
+// ---------------- Resize handling (robust against browser zoom) ----------------
+let resizeTimer = null;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(()=>{
+    Object.values(state.charts).forEach(c=>{ try{ c.resize(); }catch(e){} });
+  }, 150);
+});
+
+// ---------------- Init ----------------
+function init(){
+  loadRows(SEED_DATA);
+  const total = state.rows.length;
+  setStatus('good', total + ' inovasi termuat (data awal) — unggah file terbaru kapan saja');
+  renderRiwayat();
+  const fn = document.getElementById('footerNote');
+  if(fn){
+    fn.textContent += Store.mode==='claude'
+      ? ' · Riwayat & status verifikasi tersimpan ke akun Claude Anda'
+      : ' · Riwayat & status verifikasi tersimpan lokal di browser ini (localStorage) — tidak terbagi ke perangkat/pengguna lain';
+  }
+}
+init();
+</script>
+</body>
+</html>
